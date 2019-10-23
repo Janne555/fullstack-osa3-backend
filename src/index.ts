@@ -4,7 +4,7 @@ import bodyparser from 'body-parser'
 const app = express()
 app.use(bodyparser.json())
 
-let persons = [
+let persons: Person[] = [
   {
     "name": "Ada Lovelace",
     "number": "39-44-5323523",
@@ -32,7 +32,7 @@ let persons = [
   }
 ]
 
-function nextId() {
+function nextId() {
   return Math.ceil(Math.random() * 1000000000)
 }
 
@@ -66,6 +66,30 @@ app.post('/api/persons', (req, res) => {
   person.id = nextId()
   persons = persons.concat(person)
   res.json(person)
+})
+
+app.put('/api/persons/:id', (req, res) => {
+  let person = req.body as Person
+  const id = Number(req.params.id)
+  if (person.name) {
+    if (person.number) {
+      const index = persons.findIndex(p => p.id === id)
+      persons[index] = { ...persons[index], number: person.number }
+      res.json(persons[index])
+    } else {
+      if (persons.some(p => p.name === person.name)) {
+        res.status(400)
+        return res.json({ error: "name must be unique" })
+      } else {
+        person = { id: nextId(), name: person.name }
+        persons = persons.concat(person)
+        res.json(person)
+      }
+    }
+  } else {
+    res.status(400)
+    return res.json({ error: "missing name" })
+  }
 })
 
 const PORT = 3001
