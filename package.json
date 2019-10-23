@@ -4,7 +4,7 @@
   "description": "inspired by https://github.com/microsoft/TypeScript-Node-Starter/blob/master/package.json",
   "main": "./src/index.ts",
   "scripts": {
-    "start": "node --inspect=5858 -r ts-node/register ./src/index.ts",
+    "start": "node dist/index.js",
     "watch-ts": "node_modules/typescript/bin/tsc -w",
     "watch-node": "nodemon dist/index.js",
     "test": "echo \"no test specified\" && exit 1",
