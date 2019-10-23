@@ -1,7 +1,14 @@
 import express from 'express'
 import bodyparser from 'body-parser'
+import morgan from 'morgan'
+
+morgan.token('post_body', (req, res) => {
+  console.log("here", req.headers["content-type"])
+  return req.headers["content-type"] === "application/json" ? JSON.stringify(req.body) : ""
+})
 
 const app = express()
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post_body'))
 app.use(bodyparser.json())
 
 let persons: Person[] = [
