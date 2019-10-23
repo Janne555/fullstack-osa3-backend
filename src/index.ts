@@ -1,13 +1,14 @@
 import express from 'express'
 import bodyparser from 'body-parser'
 import morgan from 'morgan'
+import cors from 'cors'
 
 morgan.token('post_body', (req, res) => {
-  console.log("here", req.headers["content-type"])
   return req.headers["content-type"] === "application/json" ? JSON.stringify(req.body) : ""
 })
 
 const app = express()
+app.use(cors())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post_body'))
 app.use(bodyparser.json())
 
@@ -99,7 +100,7 @@ app.put('/api/persons/:id', (req, res) => {
   }
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on ${PORT}`)
 })
