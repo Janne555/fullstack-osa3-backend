@@ -8,7 +8,7 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
 morgan_1.default.token('post_body', (req, res) => {
-    return req.headers["content-type"] === "application/json" ? JSON.stringify(req.body) : "";
+    return req.headers["content-type"] && req.headers["content-type"].includes("application/json") ? JSON.stringify(req.body) : "";
 });
 const app = express_1.default();
 app.use(express_1.default.static('build'));
