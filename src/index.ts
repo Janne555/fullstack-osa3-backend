@@ -4,7 +4,7 @@ import morgan from 'morgan'
 import cors from 'cors'
 
 morgan.token('post_body', (req, res) => {
-  return req.headers["content-type"] === "application/json" ? JSON.stringify(req.body) : ""
+  return req.headers["content-type"] && req.headers["content-type"].includes("application/json") ? JSON.stringify(req.body) : ""
 })
 
 const app = express()
