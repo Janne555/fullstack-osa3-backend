@@ -8,7 +8,11 @@
     "watch-ts": "node_modules/typescript/bin/tsc -w",
     "watch-node": "nodemon dist/index.js",
     "test": "echo \"no test specified\" && exit 1",
-    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\""
+    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
+    "build:ui": "rm -rf build && cd ../fullstack/osa2/puhelinluettelo && npm run build --prod && cp -r build ../../../fullstack-osa3-backend",
+    "deploy": "git push heroku master",
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push && npm run deploy",
+    "logs:prod": "heroku logs --tail"
   },
   "author": "",
   "license": "ISC",
