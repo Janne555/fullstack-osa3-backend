@@ -11,6 +11,7 @@ morgan_1.default.token('post_body', (req, res) => {
     return req.headers["content-type"] === "application/json" ? JSON.stringify(req.body) : "";
 });
 const app = express_1.default();
+app.use(express_1.default.static('build'));
 app.use(cors_1.default());
 app.use(morgan_1.default(':method :url :status :res[content-length] - :response-time ms :post_body'));
 app.use(body_parser_1.default.json());
