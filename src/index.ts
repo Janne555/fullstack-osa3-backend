@@ -1,7 +1,10 @@
-import express from 'express'
+import express, { response } from 'express'
 import bodyparser from 'body-parser'
 import morgan from 'morgan'
 import cors from 'cors'
+import dotenv from 'dotenv'
+dotenv.config()
+import Person from './models/person'
 
 morgan.token('post_body', (req, res) => {
   return req.headers["content-type"] && req.headers["content-type"].includes("application/json") ? JSON.stringify(req.body) : ""
@@ -12,34 +15,6 @@ app.use(express.static('build'))
 app.use(cors())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post_body'))
 app.use(bodyparser.json())
-
-let persons: Person[] = [
-  {
-    "name": "Ada Lovelace",
-    "number": "39-44-5323523",
-    "id": 2
-  },
-  {
-    "name": "Dan Abramov",
-    "number": "12-43-234345",
-    "id": 3
-  },
-  {
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122",
-    "id": 4
-  },
-  {
-    "name": "rwarin",
-    "number": "aisfpasn",
-    "id": 5
-  },
-  {
-    "name": "asd",
-    "number": "321",
-    "id": 6
-  }
-]
 
 function nextId() {
   return Math.ceil(Math.random() * 1000000000)
@@ -54,52 +29,62 @@ app.get('/api/', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person.find({})
+    .then(persons => {
+      console.log(persons.map(person => person.toJSON()))
+      res.json(persons.map(person => person.toJSON()))
+    })
+    .catch(err => {
+      console.error(err)
+      res.status(500).end()
+    })
 })
 
 app.get('/api/persons/:id', (req, res) => {
-  const person = persons.find(person => person.id === Number(req.params.id))
-  if (person)
-    res.json(person)
-  else
-    res.status(404).end()
+  Person.findById(req.params.id)
+    .then(person => {
+      response.json(person.toJSON())
+    })
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  persons = persons.filter(person => person.id !== Number(req.params.id))
-  res.status(204).end()
-})
+// app.delete('/api/persons/:id', (req, res) => {
+//   persons = persons.filter(person => person.id !== Number(req.params.id))
+//   res.status(204).end()
+// })
 
 app.post('/api/persons', (req, res) => {
-  const person = req.body as Person
-  person.id = nextId()
-  persons = persons.concat(person)
-  res.json(person)
+  if (!req.body)
+    return response.status(400).json({ error: 'content missing' })
+  const person = new Person({ ...req.body })
+  person.save()
+    .then(savedPerson => {
+      res.json(savedPerson.toJSON())
+    })
 })
 
-app.put('/api/persons/:id', (req, res) => {
-  let person = req.body as Person
-  const id = Number(req.params.id)
-  if (person.name) {
-    if (person.number) {
-      const index = persons.findIndex(p => p.id === id)
-      persons[index] = { ...persons[index], number: person.number }
-      res.json(persons[index])
-    } else {
-      if (persons.some(p => p.name === person.name)) {
-        res.status(400)
-        return res.json({ error: "name must be unique" })
-      } else {
-        person = { id: nextId(), name: person.name }
-        persons = persons.concat(person)
-        res.json(person)
-      }
-    }
-  } else {
-    res.status(400)
-    return res.json({ error: "missing name" })
-  }
-})
+// app.put('/api/persons/:id', (req, res) => {
+//   let person = req.body as Person
+//   const id = Number(req.params.id)
+//   if (person.name) {
+//     if (person.number) {
+//       const index = persons.findIndex(p => p.id === id)
+//       persons[index] = { ...persons[index], number: person.number }
+//       res.json(persons[index])
+//     } else {
+//       if (persons.some(p => p.name === person.name)) {
+//         res.status(400)
+//         return res.json({ error: "name must be unique" })
+//       } else {
+//         person = { id: nextId(), name: person.name }
+//         persons = persons.concat(person)
+//         res.json(person)
+//       }
+//     }
+//   } else {
+//     res.status(400)
+//     return res.json({ error: "missing name" })
+//   }
+// })
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
