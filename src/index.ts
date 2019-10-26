@@ -1,4 +1,4 @@
-import express, { response } from 'express'
+import express, { Response, NextFunction, Request } from 'express'
 import bodyparser from 'body-parser'
 import morgan from 'morgan'
 import cors from 'cors'
@@ -12,13 +12,9 @@ morgan.token('post_body', (req, res) => {
 
 const app = express()
 app.use(express.static('build'))
-app.use(cors())
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post_body'))
 app.use(bodyparser.json())
-
-function nextId() {
-  return Math.ceil(Math.random() * 1000000000)
-}
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post_body'))
+app.use(cors())
 
 app.get('/info', (req, res) => {
   Person.find({})
@@ -42,25 +38,28 @@ app.get('/api/persons', (req, res) => {
     })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id)
     .then(person => {
-      res.json(person.toJSON())
+      if (person)
+        res.json(person.toJSON())
+      else
+        res.status(404).end()
     })
-    .catch(error => {
-      console.error(error)
-      res.status(404).end()
-    })
+    .catch(error => next(error))
 })
 
-// app.delete('/api/persons/:id', (req, res) => {
-//   persons = persons.filter(person => person.id !== Number(req.params.id))
-//   res.status(204).end()
-// })
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then(resukt => {
+      res.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
 app.post('/api/persons', (req, res) => {
   if (!req.body)
-    return response.status(400).json({ error: 'content missing' })
+    return res.status(400).json({ error: 'content missing' })
   const person = new Person({ ...req.body })
   person.save()
     .then(savedPerson => {
@@ -68,29 +67,44 @@ app.post('/api/persons', (req, res) => {
     })
 })
 
-// app.put('/api/persons/:id', (req, res) => {
-//   let person = req.body as Person
-//   const id = Number(req.params.id)
-//   if (person.name) {
-//     if (person.number) {
-//       const index = persons.findIndex(p => p.id === id)
-//       persons[index] = { ...persons[index], number: person.number }
-//       res.json(persons[index])
-//     } else {
-//       if (persons.some(p => p.name === person.name)) {
-//         res.status(400)
-//         return res.json({ error: "name must be unique" })
-//       } else {
-//         person = { id: nextId(), name: person.name }
-//         persons = persons.concat(person)
-//         res.json(person)
-//       }
-//     }
-//   } else {
-//     res.status(400)
-//     return res.json({ error: "missing name" })
-//   }
-// })
+app.put('/api/persons/:id', (req, res, next) => {
+  const person: Person = {
+    name: req.body.name,
+    number: req.body.number
+  }
+  
+  if (person.name) {
+    if (person.number) {
+      Person.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then(updatedPerson => {
+          res.json(updatedPerson.toJSON())
+        })
+        .catch(error => next(error))
+    } else {
+      new Person({ ...req.body }).save()
+        .then(savedPerson => {
+          res.json(savedPerson.toJSON())
+        })
+    }
+  } else {
+    res.status(400)
+    return res.json({ error: "missing name" })
+  }
+})
+
+function unknownEndpoint(request: Request, response: Response) {
+  response.status(404).send({ error: "unknown endpoint" })
+}
+app.use(unknownEndpoint)
+
+function errorHandler(error: any, request: Request, response: Response, next: NextFunction) {
+  console.error(error.message)
+  if (error.name === "CastError" && error.kind === "ObjectId") {
+    return response.status(400).send({ error: "malformatted id" })
+  }
+  next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

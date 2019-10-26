@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
+mongoose.set('useFindAndModify', false)
 
 const url = process.env.MONGODB_URI
+
 console.log("connecting to", url)
+
 mongoose.connect(url, { useNewUrlParser: true })
   .then(result => {
     console.log("connected to MongoDB")

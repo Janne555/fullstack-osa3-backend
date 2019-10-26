@@ -1,5 +1,5 @@
 type Person = {
-  id: number
+  id?: number
   number?: string
   name: string
 }
