@@ -21,7 +21,10 @@ function nextId() {
 }
 
 app.get('/info', (req, res) => {
-  res.send(`<p>Phonebook has info for 4 people</p><p>${new Date()}</p>`)
+  Person.find({})
+    .then(persons => {
+      res.send(`<p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>`)
+    })
 })
 
 app.get('/api/', (req, res) => {

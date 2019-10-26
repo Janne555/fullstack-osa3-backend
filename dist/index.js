@@ -29,7 +29,10 @@ function nextId() {
     return Math.ceil(Math.random() * 1000000000);
 }
 app.get('/info', (req, res) => {
-    res.send(`<p>Phonebook has info for 4 people</p><p>${new Date()}</p>`);
+    person_1.default.find({})
+        .then(persons => {
+        res.send(`<p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>`);
+    });
 });
 app.get('/api/', (req, res) => {
     res.send('<h1>Hello world</h1>');
