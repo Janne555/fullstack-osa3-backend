@@ -34,7 +34,6 @@ app.get('/api/', (req, res) => {
 app.get('/api/persons', (req, res) => {
   Person.find({})
     .then(persons => {
-      console.log(persons.map(person => person.toJSON()))
       res.json(persons.map(person => person.toJSON()))
     })
     .catch(err => {
@@ -46,7 +45,11 @@ app.get('/api/persons', (req, res) => {
 app.get('/api/persons/:id', (req, res) => {
   Person.findById(req.params.id)
     .then(person => {
-      response.json(person.toJSON())
+      res.json(person.toJSON())
+    })
+    .catch(error => {
+      console.error(error)
+      res.status(404).end()
     })
 })
 
