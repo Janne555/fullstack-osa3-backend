@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+mongoose_1.default.set('useFindAndModify', false);
 const url = process.env.MONGODB_URI;
 console.log("connecting to", url);
 mongoose_1.default.connect(url, { useNewUrlParser: true })

@@ -1,16 +1,9 @@
 "use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importStar(require("express"));
+const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const cors_1 = __importDefault(require("cors"));
@@ -22,12 +15,9 @@ morgan_1.default.token('post_body', (req, res) => {
 });
 const app = express_1.default();
 app.use(express_1.default.static('build'));
-app.use(cors_1.default());
-app.use(morgan_1.default(':method :url :status :res[content-length] - :response-time ms :post_body'));
 app.use(body_parser_1.default.json());
-function nextId() {
-    return Math.ceil(Math.random() * 1000000000);
-}
+app.use(morgan_1.default(':method :url :status :res[content-length] - :response-time ms :post_body'));
+app.use(cors_1.default());
 app.get('/info', (req, res) => {
     person_1.default.find({})
         .then(persons => {
@@ -40,7 +30,6 @@ app.get('/api/', (req, res) => {
 app.get('/api/persons', (req, res) => {
     person_1.default.find({})
         .then(persons => {
-        console.log(persons.map(person => person.toJSON()));
         res.json(persons.map(person => person.toJSON()));
     })
         .catch(err => {
@@ -48,48 +37,69 @@ app.get('/api/persons', (req, res) => {
         res.status(500).end();
     });
 });
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     person_1.default.findById(req.params.id)
         .then(person => {
-        express_1.response.json(person.toJSON());
-    });
+        if (person)
+            res.json(person.toJSON());
+        else
+            res.status(404).end();
+    })
+        .catch(error => next(error));
 });
-// app.delete('/api/persons/:id', (req, res) => {
-//   persons = persons.filter(person => person.id !== Number(req.params.id))
-//   res.status(204).end()
-// })
+app.delete('/api/persons/:id', (req, res, next) => {
+    person_1.default.findByIdAndRemove(req.params.id)
+        .then(resukt => {
+        res.status(204).end();
+    })
+        .catch(error => next(error));
+});
 app.post('/api/persons', (req, res) => {
     if (!req.body)
-        return express_1.response.status(400).json({ error: 'content missing' });
+        return res.status(400).json({ error: 'content missing' });
     const person = new person_1.default(Object.assign({}, req.body));
     person.save()
         .then(savedPerson => {
         res.json(savedPerson.toJSON());
     });
 });
-// app.put('/api/persons/:id', (req, res) => {
-//   let person = req.body as Person
-//   const id = Number(req.params.id)
-//   if (person.name) {
-//     if (person.number) {
-//       const index = persons.findIndex(p => p.id === id)
-//       persons[index] = { ...persons[index], number: person.number }
-//       res.json(persons[index])
-//     } else {
-//       if (persons.some(p => p.name === person.name)) {
-//         res.status(400)
-//         return res.json({ error: "name must be unique" })
-//       } else {
-//         person = { id: nextId(), name: person.name }
-//         persons = persons.concat(person)
-//         res.json(person)
-//       }
-//     }
-//   } else {
-//     res.status(400)
-//     return res.json({ error: "missing name" })
-//   }
-// })
+app.put('/api/persons/:id', (req, res, next) => {
+    const person = {
+        name: req.body.name,
+        number: req.body.number
+    };
+    if (person.name) {
+        if (person.number) {
+            person_1.default.findByIdAndUpdate(req.params.id, person, { new: true })
+                .then(updatedPerson => {
+                res.json(updatedPerson.toJSON());
+            })
+                .catch(error => next(error));
+        }
+        else {
+            new person_1.default(Object.assign({}, req.body)).save()
+                .then(savedPerson => {
+                res.json(savedPerson.toJSON());
+            });
+        }
+    }
+    else {
+        res.status(400);
+        return res.json({ error: "missing name" });
+    }
+});
+function unknownEndpoint(request, response) {
+    response.status(404).send({ error: "unknown endpoint" });
+}
+app.use(unknownEndpoint);
+function errorHandler(error, request, response, next) {
+    console.error(error.message);
+    if (error.name === "CastError" && error.kind === "ObjectId") {
+        return response.status(400).send({ error: "malformatted id" });
+    }
+    next(error);
+}
+app.use(errorHandler);
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);
