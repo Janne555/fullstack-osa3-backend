@@ -57,7 +57,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   if (!req.body)
     return res.status(400).json({ error: 'content missing' })
   const person = new Person({ ...req.body })
@@ -65,6 +65,7 @@ app.post('/api/persons', (req, res) => {
     .then(savedPerson => {
       res.json(savedPerson.toJSON())
     })
+    .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -72,10 +73,10 @@ app.put('/api/persons/:id', (req, res, next) => {
     name: req.body.name,
     number: req.body.number
   }
-  
+
   if (person.name) {
     if (person.number) {
-      Person.findByIdAndUpdate(req.params.id, person, { new: true })
+      Person.findByIdAndUpdate(req.params.id, person, { new: true, context: 'query', runValidators: true })
         .then(updatedPerson => {
           res.json(updatedPerson.toJSON())
         })
@@ -85,6 +86,7 @@ app.put('/api/persons/:id', (req, res, next) => {
         .then(savedPerson => {
           res.json(savedPerson.toJSON())
         })
+        .catch(error => next(error))
     }
   } else {
     res.status(400)
@@ -102,6 +104,11 @@ function errorHandler(error: any, request: Request, response: Response, next: Ne
   if (error.name === "CastError" && error.kind === "ObjectId") {
     return response.status(400).send({ error: "malformatted id" })
   }
+
+  if (error.name === "ValidationError" && error.message.includes("unique")) {
+    return response.status(400).send({ error: "name must be unique" })
+  }
+  
   next(error)
 }
 app.use(errorHandler)
