@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+const mongoose_unique_validator_1 = __importDefault(require("mongoose-unique-validator"));
 mongoose_1.default.set('useFindAndModify', false);
 const url = process.env.MONGODB_URI;
 console.log("connecting to", url);
@@ -15,9 +16,19 @@ mongoose_1.default.connect(url, { useNewUrlParser: true })
     console.error('error connecting to MongoDB:', error.message);
 });
 const personSchema = new mongoose_1.default.Schema({
-    name: String,
-    number: String
+    name: {
+        type: String,
+        required: true,
+        unique: true,
+        minlength: 3
+    },
+    number: {
+        type: String,
+        required: true,
+        minlength: 8
+    }
 });
+personSchema.plugin(mongoose_unique_validator_1.default);
 personSchema.set('toJSON', {
     transform: (document, returnedObject) => {
         returnedObject.id = returnedObject._id.toString();

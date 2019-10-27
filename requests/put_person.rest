@@ -1,7 +1,7 @@
-PUT http://localhost:3001/api/persons/2
+PUT http://localhost:3001/api/persons/5db56730f65b445bd5f35e9c
 content-type: application/json
 
 {
-  "name": "Ada Lovelace",
+  "name": "uusi",
   "number": "asdasdasd"
 }
