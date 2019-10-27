@@ -10,8 +10,8 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const person_1 = __importDefault(require("./models/person"));
-morgan_1.default.token('post_body', (req, res) => {
-    return req.headers["content-type"] && req.headers["content-type"].includes("application/json") ? JSON.stringify(req.body) : "";
+morgan_1.default.token('post_body', (req) => {
+    return req.headers['content-type'] && req.headers['content-type'].includes('application/json') ? JSON.stringify(req.body) : '';
 });
 const app = express_1.default();
 app.use(express_1.default.static('build'));
@@ -49,7 +49,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 });
 app.delete('/api/persons/:id', (req, res, next) => {
     person_1.default.findByIdAndRemove(req.params.id)
-        .then(resukt => {
+        .then(() => {
         res.status(204).end();
     })
         .catch(error => next(error));
@@ -90,20 +90,20 @@ app.put('/api/persons/:id', (req, res, next) => {
     }
     else {
         res.status(400);
-        return res.json({ error: "missing name" });
+        return res.json({ error: 'missing name' });
     }
 });
 function unknownEndpoint(request, response) {
-    response.status(404).send({ error: "unknown endpoint" });
+    response.status(404).send({ error: 'unknown endpoint' });
 }
 app.use(unknownEndpoint);
 function errorHandler(error, request, response, next) {
     console.error(error.message);
-    if (error.name === "CastError" && error.kind === "ObjectId") {
-        return response.status(400).send({ error: "malformatted id" });
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+        return response.status(400).send({ error: 'malformatted id' });
     }
-    if (error.name === "ValidationError") {
-        return response.status(400).send({ error: error.message.split("\n")[0] });
+    if (error.name === 'ValidationError') {
+        return response.status(400).send({ error: error.message.split('\n')[0] });
     }
     next(error);
 }

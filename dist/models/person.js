@@ -7,10 +7,10 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const mongoose_unique_validator_1 = __importDefault(require("mongoose-unique-validator"));
 mongoose_1.default.set('useFindAndModify', false);
 const url = process.env.MONGODB_URI;
-console.log("connecting to", url);
+console.log('connecting to', url);
 mongoose_1.default.connect(url, { useNewUrlParser: true })
-    .then(result => {
-    console.log("connected to MongoDB");
+    .then(() => {
+    console.log('connected to MongoDB');
 })
     .catch(error => {
     console.error('error connecting to MongoDB:', error.message);
