@@ -1,3 +1,4 @@
+//eslint-disable-next-line
 import express, { Response, NextFunction, Request } from 'express'
 import bodyparser from 'body-parser'
 import morgan from 'morgan'
