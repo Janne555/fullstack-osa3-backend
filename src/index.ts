@@ -6,8 +6,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 import Person from './models/person'
 
-morgan.token('post_body', (req, res) => {
-  return req.headers["content-type"] && req.headers["content-type"].includes("application/json") ? JSON.stringify(req.body) : ""
+morgan.token('post_body', (req) => {
+  return req.headers['content-type'] && req.headers['content-type'].includes('application/json') ? JSON.stringify(req.body) : ''
 })
 
 const app = express()
@@ -51,7 +51,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-    .then(resukt => {
+    .then(() => {
       res.status(204).end()
     })
     .catch(error => next(error))
@@ -93,23 +93,23 @@ app.put('/api/persons/:id', (req, res, next) => {
     }
   } else {
     res.status(400)
-    return res.json({ error: "missing name" })
+    return res.json({ error: 'missing name' })
   }
 })
 
 function unknownEndpoint(request: Request, response: Response) {
-  response.status(404).send({ error: "unknown endpoint" })
+  response.status(404).send({ error: 'unknown endpoint' })
 }
 app.use(unknownEndpoint)
 
 function errorHandler(error: any, request: Request, response: Response, next: NextFunction) {
   console.error(error.message)
-  if (error.name === "CastError" && error.kind === "ObjectId") {
-    return response.status(400).send({ error: "malformatted id" })
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
+    return response.status(400).send({ error: 'malformatted id' })
   }
 
-  if (error.name === "ValidationError") {
-    return response.status(400).send({ error: error.message.split("\n")[0] })
+  if (error.name === 'ValidationError') {
+    return response.status(400).send({ error: error.message.split('\n')[0] })
   }
 
   next(error)
