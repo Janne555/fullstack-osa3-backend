@@ -78,7 +78,10 @@ app.put('/api/persons/:id', (req, res, next) => {
     if (person.number) {
       Person.findByIdAndUpdate(req.params.id, person, { new: true, context: 'query', runValidators: true })
         .then(updatedPerson => {
-          res.json(updatedPerson.toJSON())
+          if (updatedPerson)
+            res.json(updatedPerson.toJSON())
+          else
+            res.status(404).send()
         })
         .catch(error => next(error))
     } else {
@@ -105,10 +108,10 @@ function errorHandler(error: any, request: Request, response: Response, next: Ne
     return response.status(400).send({ error: "malformatted id" })
   }
 
-  if (error.name === "ValidationError" && error.message.includes("unique")) {
-    return response.status(400).send({ error: "name must be unique" })
+  if (error.name === "ValidationError") {
+    return response.status(400).send({ error: error.message.split("\n")[0] })
   }
-  
+
   next(error)
 }
 app.use(errorHandler)
